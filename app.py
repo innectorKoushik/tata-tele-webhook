@@ -1,22 +1,26 @@
 from flask import Flask, request, jsonify
-import pymysql
+import pyodbc
 import os
 from datetime import datetime
 
 app = Flask(__name__)
 
-# ✅ Get MySQL Credentials from Environment Variables
+# ✅ Azure SQL Database Configuration (Use Environment Variables)
 db_config = {
-    "host": os.getenv("DB_HOST", "localhost"),
-    "user": os.getenv("DB_USER", "root"),
-    "password": os.getenv("DB_PASSWORD", ""),
+    "server": os.getenv("DB_SERVER", "kei-sql-server.database.windows.net"),
     "database": os.getenv("DB_NAME", "lead_db"),
+    "username": os.getenv("DB_USER", "admin"),
+    "password": os.getenv("DB_PASSWORD", "YourStrongPassword"),
+    "driver": "{ODBC Driver 17 for SQL Server}",
 }
 
-# ✅ Function to Insert Data into MySQL
+# ✅ Connection String for Azure SQL
+conn_str = f"DRIVER={db_config['driver']};SERVER={db_config['server']};DATABASE={db_config['database']};UID={db_config['username']};PWD={db_config['password']}"
+
+# ✅ Function to Insert Data into Azure SQL
 def insert_into_db(table_name, data):
     try:
-        conn = pymysql.connect(**db_config)
+        conn = pyodbc.connect(conn_str)
         cursor = conn.cursor()
 
         def parse_datetime(value):
@@ -26,11 +30,11 @@ def insert_into_db(table_name, data):
         INSERT INTO {table_name} (
             callID, dispnumber, caller_id, start_time, answer_stamp, end_time,
             callType, call_duration, destination, status, resource_url, missedFrom, hangup_cause
-        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """
         values = (
             data.get("callID"), data.get("dispnumber"), data.get("caller_id"),
-            parse_datetime(data.get("start_time")), parse_datetime(data.get("answer_stamp")), 
+            parse_datetime(data.get("start_time")), parse_datetime(data.get("answer_stamp")),
             parse_datetime(data.get("end_time")), data.get("callType"),
             data.get("call_duration"), data.get("destination"), data.get("status"),
             data.get("resource_url"), data.get("missedFrom"), data.get("hangup_cause")
@@ -40,7 +44,7 @@ def insert_into_db(table_name, data):
         conn.commit()
         print(f"✅ Data inserted into {table_name}")
 
-    except pymysql.MySQLError as e:
+    except pyodbc.Error as e:
         print(f"❌ Database Error: {str(e)}")
 
     finally:
