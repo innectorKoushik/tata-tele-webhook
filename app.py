@@ -8,9 +8,9 @@ app = Flask(__name__)
 # ✅ Azure SQL Database Configuration (Use Environment Variables)
 db_config = {
     "server": os.getenv("DB_SERVER", "kei-sql-server.database.windows.net"),
-    "database": os.getenv("DB_NAME", "lead_db"),
-    "username": os.getenv("DB_USER", "admin"),
-    "password": os.getenv("DB_PASSWORD", "YourStrongPassword"),
+    "database": os.getenv("DB_NAME", "LeadManagementDB"),
+    "username": os.getenv("DB_USER", "adminuser"),
+    "password": os.getenv("DB_PASSWORD", "Kingston#1234"),
     "driver": "{ODBC Driver 17 for SQL Server}",
 }
 
