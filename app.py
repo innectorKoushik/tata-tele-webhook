@@ -1,9 +1,9 @@
 from flask import Flask, request, jsonify
 from sqlalchemy import create_engine, text
-import os
+import pymysql
 from datetime import datetime
 
-app = Flask(_name_)
+app = Flask(__name__)
 
 # ✅ Local MySQL Database Configuration
 db_config = {
@@ -14,7 +14,7 @@ db_config = {
 }
 
 # ✅ Create MySQL Connection String
-DATABASE_URL = f"mysql+mysqlconnector://{db_config['username']}:{db_config['password']}@{db_config['host']}/{db_config['database']}"
+DATABASE_URL = f"mysql+pymysql://{db_config['username']}:{db_config['password']}@{db_config['host']}/{db_config['database']}"
 
 engine = create_engine(DATABASE_URL, pool_size=5, max_overflow=10)
 
@@ -64,7 +64,7 @@ def home():
 
 @app.route('/answered_outbound', methods=['POST'])
 def answered_outbound():
-    data = request.json
+    data = request.get_json(force=True, silent=True) or {}
     if not data:
         return jsonify({"error": "No data received"}), 400
     insert_into_db("answered_outbound_calls", data)
@@ -72,7 +72,7 @@ def answered_outbound():
 
 @app.route('/answered_inbound', methods=['POST'])
 def answered_inbound():
-    data = request.json
+    data = request.get_json(force=True, silent=True) or {}
     if not data:
         return jsonify({"error": "No data received"}), 400
     insert_into_db("answered_inbound_calls", data)
@@ -80,7 +80,7 @@ def answered_inbound():
 
 @app.route('/missed_outbound', methods=['POST'])
 def missed_outbound():
-    data = request.json
+    data = request.get_json(force=True, silent=True) or {}
     if not data:
         return jsonify({"error": "No data received"}), 400
     insert_into_db("missed_outbound_calls", data)
@@ -88,12 +88,12 @@ def missed_outbound():
 
 @app.route('/missed_inbound', methods=['POST'])
 def missed_inbound():
-    data = request.json
+    data = request.get_json(force=True, silent=True) or {}
     if not data:
         return jsonify({"error": "No data received"}), 400
     insert_into_db("missed_inbound_calls", data)
     return jsonify({"message": "Missed inbound call received"}), 200
 
 # ✅ Run Flask App
-if _name_ == '_main_':
+if __name__ == '__main__':
     app.run(host='0.0.0.0', port=10000, debug=True)
